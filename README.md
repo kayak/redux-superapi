@@ -31,6 +31,19 @@ constructor.
 * `defaultRequestConfig` (optional): pass a default request configuration that will be passed on to
 [axios](https://github.com/mzabriskie/axios) on every request.
 
+Sample endpoint configuration:
+
+```
+const endpoints = {
+    experiments: {
+        url: "/api/experiments/"
+    },
+    experimentDetails: {
+        url: "/api/experiments/:experimentId/",
+    },
+};
+```
+
 Next, create a store with the SuperApi reducers.
 
 ```
@@ -54,6 +67,8 @@ superApi.endpointName.patch(args, data, requestConfig = {});
 * `args` (required): dictionary mapping of arguments that need to be replaced in the URL.
 * `data` (required, only for post, put, patch): data to be passed to the server
 * `requestConfig`: configuration object passed on to axios. Extends the configuration set at the API/Endpoint levels.
+
+Example: `dispatch(superApi.experimentDetails.get({experimentId: 42}))`
 
 ## Development
 
