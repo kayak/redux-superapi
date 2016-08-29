@@ -28,7 +28,7 @@
   },
   "homepage": "https://github.com/kayak/redux-superapi#readme",
   "dependencies": {
-    "axios": "^0.13.1"
+    "axios": "^0.14.0"
   },
   "devDependencies": {
     "babel-cli": "^6.14.0",
