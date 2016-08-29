@@ -1,6 +1,6 @@
 {
   "name": "redux-superapi",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Create redux actions and reducers for REST endpoints",
   "main": "./lib/SuperApi.js",
   "scripts": {
