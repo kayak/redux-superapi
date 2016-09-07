@@ -1,5 +1,4 @@
-import {expect} from "chai";
-import chai from "chai";
+import chai, {expect} from "chai";
 import chaiSubset from "chai-subset";
 import EndPoint from "../src/EndPoint";
 
@@ -32,6 +31,16 @@ describe('EndPoint', () => {
 
     describe('.reduce()', () => {
         const endPoint = new EndPoint('test', {url: '/api/buckets/'});
+
+        it('has correct default state', function () {
+            expect(endPoint.reduce(undefined, {})).to.deep.equal({
+                loading: false,
+                syncing: false,
+                sync: false,
+                data: {},
+                error: null
+            });
+        });
 
         it('transitions flags on request', function () {
             const oldState = {
@@ -72,4 +81,32 @@ describe('EndPoint', () => {
         });
     });
 
+});
+
+
+describe('Multi-request Endpoint', () => {
+    const endPoint = new EndPoint('test', {
+        url: '/api/buckets/:bucketId/',
+        requestKey: (args) => args.bucketId
+    });
+
+    describe('.reduce()', () => {
+        it('has empty state by default', function () {
+            expect(endPoint.reduce(undefined, {})).to.be.empty;
+        });
+
+        it('sets default state on reset', function () {
+            const action = endPoint.actionReset(({bucketId: 42}));
+
+            expect(endPoint.reduce(undefined, action)).to.deep.equal({
+                '42': {
+                    loading: false,
+                    syncing: false,
+                    sync: false,
+                    data: {},
+                    error: null
+                }
+            });
+        });
+    });
 });
