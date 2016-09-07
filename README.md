@@ -26,7 +26,9 @@ Create a new SuperApi configuration.
 
 * `endPointsConfig` (required): map unique endpoint names to an object with:
     * `url` (required): url of the endpoint
-    * `defaultRequestConfig`: default configuration passed on to axios, extending the configuration passed to the `SuperApi`
+    * `requestKey` (optional): function that returns a unique identifier of the request. See
+      [making multiple requests for an endpoint](#making-multiple-requests-for-an-endpoint)
+    * `defaultRequestConfig` (optional): default configuration passed on to axios, extending the configuration passed to the `SuperApi`
 constructor.
 * `defaultRequestConfig` (optional): pass a default request configuration that will be passed on to
 [axios](https://github.com/mzabriskie/axios) on every request.
@@ -69,6 +71,68 @@ superApi.endpointName.patch(args, data, requestConfig = {});
 * `requestConfig`: configuration object passed on to axios. Extends the configuration set at the API/Endpoint levels.
 
 Example: `dispatch(superApi.experimentDetails.get({experimentId: 42}))`
+
+### State
+
+The default state is:
+
+```
+{
+    [endpointName]: {
+        sync: false,
+        syncing: false,
+        loaded: false,
+        data: {},
+        error: null
+    }
+}
+```
+
+### Handling error
+
+State's `error` property will be axios' error message for malformed requests, or the data returned
+by the end point if the request went through but returned a response with an error status code.
+
+### Cancelling requests
+
+Dispatching `superApi.endpointName.reset()` will not only reset the state, it will also cancel any request that was
+started. `reset()` will also be called before starting a new request if another request is still in progress for that
+endpoint.
+
+### Making multiple requests for an endpoint
+
+By default, you can only do one request at a time per endpoint. Doing another request will reset the state. In some
+situations you actually want to be able to do multiple requests and store their state separately.
+
+This is possible by defining the `requestKey` endpoint option. `requestKey` should be a deterministic function that
+takes as sole argument a dictionary of the `args` for the request and returns a string (or anything that can be cast to
+string).
+
+```
+const endpoints = {
+    experimentDetails: {
+        url: "/api/experiments/:experimentId/",
+        requestKey: (args) => args.experimentId
+    },
+};
+```
+
+The state will then look like
+
+```
+{
+    [endpointName]: {
+       [experimentId]: {
+           ...
+       }
+    }
+```
+
+For cancelling a request simply pass the `args` to `reset`:
+
+```
+superApi.endpointName.reset({experimentId: 42})
+```
 
 ## Development
 
