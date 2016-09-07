@@ -2,10 +2,11 @@ import axios from "axios";
 
 
 class EndPoint {
-    constructor(name, {url, defaultRequestConfig}) {
+    constructor(name, {url, requestKey, defaultRequestConfig}) {
         this.name = name;
         this.url = url;
         this.defaultRequestConfig = defaultRequestConfig || {};
+        this.requestKey = requestKey;
 
         // Construct the methods for http methods that don't need data
         ['delete', 'get', 'head', 'options'].forEach((method) => {
@@ -36,50 +37,55 @@ class EndPoint {
         return '@@super-api@' + this.name + '_' + action;
     }
 
-    actionSuccess(response) {
+    actionSuccess(response, args) {
         return {
             type: this.actionType('success'),
             data: response.data,
-            status: response.status
+            status: response.status,
+            args
         };
     }
 
-    actionError(error) {
+    actionError(error, args) {
         if (error.response) {
             // Server responded with an error
             return {
                 type: this.actionType('error'),
                 error: error.response.data,
-                status: error.response.status
+                status: error.response.status,
+                args
             };
         } else {
             // Request was malformed
             return {
                 type: this.actionType('error'),
-                error: error.message
+                error: error.message,
+                args
             };
         }
     }
 
-    actionRequest(method) {
+    actionRequest(method, args) {
         return {
             type: this.actionType('request'),
-            method
+            method,
+            args
         };
     }
 
-    actionReset() {
+    actionReset(args) {
         return {
-            type: this.actionType('reset')
+            type: this.actionType('reset'),
+            args
         };
     }
 
-    reset() {
-        return dispatch => dispatch(this.actionReset());
+    reset(args) {
+        return dispatch => dispatch(this.actionReset(args));
     }
 
     request(dispatch, method, args, config, data = undefined) {
-        dispatch(this.actionRequest(method));
+        dispatch(this.actionRequest(method, args));
         return axios.request({
             url: this.transformUrl(args),
             method: method,
@@ -87,11 +93,32 @@ class EndPoint {
             ...this.defaultRequestConfig[method],
             ...config
         })
-            .then(response => dispatch(this.actionSuccess(response)))
-            .catch(error => dispatch(this.actionError(error)));
+            .then(response => dispatch(this.actionSuccess(response, args)))
+            .catch(error => dispatch(this.actionError(error, args)));
     }
 
     reduce(state, action) {
+        if (this.requestKey) {
+            if (typeof state === 'undefined') {
+                state = {};
+            }
+
+            if (!action.args) {
+                return state;
+            } else {
+                let key = this.requestKey(action.args);
+
+                return {
+                    ...state,
+                    [key]: this.reduceRequest(state[key], action)
+                };
+            }
+        } else {
+            return this.reduceRequest(state, action);
+        }
+    }
+
+    reduceRequest(state, action) {
         const defaultState = {
             loading: false,
             sync: false,
@@ -101,7 +128,7 @@ class EndPoint {
         };
 
         if (typeof state === 'undefined') {
-            return defaultState;
+            state = defaultState;
         }
 
         switch (action.type) {
