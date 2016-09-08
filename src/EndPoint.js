@@ -1,12 +1,15 @@
 import axios from "axios";
-
+import cancelXhrAdapter from "axios-cancel";
+import {Cancellation} from "axios-cancel/cancel";
 
 class EndPoint {
     constructor(name, {url, requestKey, defaultRequestConfig}) {
         this.name = name;
         this.url = url;
         this.defaultRequestConfig = defaultRequestConfig || {};
-        this.requestKey = requestKey;
+        this.isMultiRequest = !!requestKey;
+        this.requestKey = requestKey || (() => 'default');
+        this.cancellation = {};
 
         // Construct the methods for http methods that don't need data
         ['delete', 'get', 'head', 'options'].forEach((method) => {
@@ -17,6 +20,17 @@ class EndPoint {
         ['post', 'put', 'patch'].forEach((method) => {
             this[method] = (args, data, config = {}) => (dispatch) => this.request(dispatch, method, args, config, data);
         });
+    }
+
+    cancel(args) {
+        let cancellation = this.cancellation[this.requestKey(args)];
+        cancellation && cancellation.cancel();
+    }
+
+    createCancellation(args) {
+        let cancellation = new Cancellation();
+        this.cancellation[this.requestKey(args)] = cancellation;
+        return cancellation;
     }
 
     transformUrl(args = {}) {
@@ -81,7 +95,10 @@ class EndPoint {
     }
 
     reset(args) {
-        return dispatch => dispatch(this.actionReset(args));
+        return dispatch => {
+            this.cancel(args);
+            dispatch(this.actionReset(args))
+        };
     }
 
     request(dispatch, method, args, config, data = undefined) {
@@ -90,6 +107,8 @@ class EndPoint {
             url: this.transformUrl(args),
             method: method,
             data: data,
+            adapter: cancelXhrAdapter,
+            cancellation: this.createCancellation(args),
             ...this.defaultRequestConfig[method],
             ...config
         })
@@ -98,7 +117,7 @@ class EndPoint {
     }
 
     reduce(state, action) {
-        if (this.requestKey) {
+        if (this.isMultiRequest) {
             if (typeof state === 'undefined') {
                 state = {};
             }
