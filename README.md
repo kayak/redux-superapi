@@ -122,11 +122,19 @@ The state will then look like
 ```
 {
     [endpointName]: {
-       [experimentId]: {
-           ...
-       }
+        [experimentId]: {
+            sync: false,
+            syncing: false,
+            loaded: false,
+            data: {},
+            error: null
+        }
     }
+}
 ```
+
+There will be one separate entry for each different experimentId you call the API with, and they will all track their
+loading status and errors independently.
 
 For cancelling a request simply pass the `args` to `reset`:
 
