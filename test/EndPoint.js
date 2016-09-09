@@ -1,14 +1,48 @@
 import chai, {expect} from "chai";
 import chaiSubset from "chai-subset";
 import EndPoint from "../src/EndPoint";
+import sinon from "sinon";
+import sinonChai from "sinon-chai";
+import MockAdapter from "axios-mock-adapter";
+import configureMockStore from "redux-mock-store";
+import thunk from "redux-thunk";
+
+const middlewares = [thunk];
+const mockStore = configureMockStore(middlewares);
+
+var mock = new MockAdapter(EndPoint.axios, {delayResponse: 50});
+mock.onAny(/.*/).reply(200);
 
 chai.use(chaiSubset);
+chai.use(sinonChai);
 
 describe('EndPoint', () => {
 
     it('has all http methods', () => {
         const endPoint = new EndPoint('test', {url: '/api/buckets/'});
         expect(endPoint).to.contain.all.keys(['delete', 'get', 'head', 'options', 'post', 'put', 'patch']);
+    });
+
+    describe('dispatch()', () => {
+        it('creates _request and _success actions for a successful endPoint.get()', (done) => {
+            const store = mockStore({});
+            const endPoint = new EndPoint('test', {url: '/api/buckets/'});
+            store.dispatch(endPoint.get()).then(function() {
+                expect(store.getActions().map(action => action.type)).to.eql([
+                    '@@super-api@test_request',
+                    '@@super-api@test_success'
+                ]);
+                done();
+            }).catch(done);
+        });
+
+        it('aborts request on reset', () => {
+            const store = mockStore({});
+            const endPoint = new EndPoint('test', {url: '/api/buckets/'});
+            sinon.spy(endPoint, 'cancel');
+            store.dispatch(endPoint.reset());
+            expect(endPoint.cancel).to.have.been.calledOnce;
+        });
     });
 
     describe('.transformUrl()', () => {

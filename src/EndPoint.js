@@ -2,6 +2,8 @@ import axios from "axios";
 import cancelXhrAdapter from "axios-cancel";
 import {Cancellation} from "axios-cancel/cancel";
 
+axios.defaults.adapter = cancelXhrAdapter;
+
 class EndPoint {
     constructor(name, {url, requestKey, defaultRequestConfig}) {
         this.name = name;
@@ -107,7 +109,6 @@ class EndPoint {
             url: this.transformUrl(args),
             method: method,
             data: data,
-            adapter: cancelXhrAdapter,
             cancellation: this.createCancellation(args),
             ...this.defaultRequestConfig[method],
             ...config
@@ -188,6 +189,9 @@ class EndPoint {
         }
     }
 }
+
+
+EndPoint.axios = axios; // used for mocking in unit-tests
 
 
 export default EndPoint;
