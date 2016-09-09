@@ -113,7 +113,10 @@ class EndPoint {
             ...config
         })
             .then(response => dispatch(this.actionSuccess(response, args)))
-            .catch(error => dispatch(this.actionError(error, args)));
+            .catch(error => {
+                dispatch(this.actionError(error, args));
+                throw error; // rethrow error for chaining
+            });
     }
 
     reduce(state, action) {
