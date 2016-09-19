@@ -142,6 +142,29 @@ For cancelling a request simply pass the `args` to `reset`:
 superApi.endpointName.reset({experimentId: 42})
 ```
 
+### Transformers and other advanced options
+
+A commonly used functionality is to transform the data received before saving it in the state. The best way to do this
+is to pass a `transformResponse` parameter to `axios`.
+
+```
+const endpoints = {
+    experiments: {
+        url: "/api/experiments/",
+        defaultRequestConfig: {
+            transformRequest: [function (data) {
+                // Do whatever you want to transform the data
+
+                return data;
+            }],
+        }
+    },
+};
+```
+
+Similarly, `redux-superapi` doesn't implement any functionality that you can already configure with `axios` so it is a
+good idea to check out [axios documentation](https://github.com/mzabriskie/axios#request-config).
+
 ## Development
 
 Pull requests and issue reports are welcome.
