@@ -49,8 +49,16 @@ class EndPoint {
         return url;
     }
 
+    actionPrefix() {
+        return '@@super-api@' + this.name + '_';
+    }
+
+    isValidActionType(actionType) {
+        return actionType && actionType.startsWith(this.actionPrefix());
+    }
+
     actionType(action) {
-        return '@@super-api@' + this.name + '_' + action;
+        return this.actionPrefix() + action;
     }
 
     actionSuccess(response, args) {
@@ -122,11 +130,19 @@ class EndPoint {
 
     reduce(state, action) {
         if (this.isMultiRequest) {
+            return this.reduceMultiRequest(state, action)
+        } else {
+            return this.reduceRequest(state, action);
+        }
+    }
+
+    reduceMultiRequest(state, action) {
             if (typeof state === 'undefined') {
                 state = {};
             }
 
-            if (!action.args) {
+            if (!this.isValidActionType(action.type)) {
+                // Don't try to reduce an action coming from a different endpoint.
                 return state;
             } else {
                 let key = this.requestKey(action.args);
@@ -136,9 +152,6 @@ class EndPoint {
                     [key]: this.reduceRequest(state[key], action)
                 };
             }
-        } else {
-            return this.reduceRequest(state, action);
-        }
     }
 
     reduceRequest(state, action) {

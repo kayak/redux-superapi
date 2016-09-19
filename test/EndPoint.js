@@ -119,20 +119,30 @@ describe('EndPoint', () => {
 
 
 describe('Multi-request Endpoint', () => {
-    const endPoint = new EndPoint('test', {
-        url: '/api/buckets/:bucketId/',
-        requestKey: (args) => args.bucketId
+    const endPoint1 = new EndPoint('planet', {
+        url: '/api/planets/:planetId/',
+        requestKey: (args) => args.planetId
+    });
+
+    const endPoint2 = new EndPoint('moon', {
+        url: '/api/moons/:planetId/:moonId/',
+        requestKey: (args) => [args.planetId, args.moonId].toString()
     });
 
     describe('.reduce()', () => {
         it('has empty state by default', function () {
-            expect(endPoint.reduce(undefined, {})).to.be.empty;
+            expect(endPoint1.reduce(undefined, {})).to.be.empty;
+        });
+
+        it("checks action type before setting initial state", function() {
+            const action = endPoint1.actionReset(({planetId: 42}));
+            expect(endPoint2.reduce(undefined, action)).to.be.empty;
         });
 
         it('sets default state on reset', function () {
-            const action = endPoint.actionReset(({bucketId: 42}));
+            const action = endPoint1.actionReset(({planetId: 42}));
 
-            expect(endPoint.reduce(undefined, action)).to.deep.equal({
+            expect(endPoint1.reduce(undefined, action)).to.deep.equal({
                 '42': {
                     loading: false,
                     syncing: false,
