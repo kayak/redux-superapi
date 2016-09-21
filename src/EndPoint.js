@@ -137,21 +137,21 @@ class EndPoint {
     }
 
     reduceMultiRequest(state, action) {
-            if (typeof state === 'undefined') {
-                state = {};
-            }
+        if (typeof state === 'undefined') {
+            state = {};
+        }
 
-            if (!this.isValidActionType(action.type)) {
-                // Don't try to reduce an action coming from a different endpoint.
-                return state;
-            } else {
-                let key = this.requestKey(action.args);
+        if (!this.isValidActionType(action.type)) {
+            // Don't try to reduce an action coming from a different endpoint.
+            return state;
+        } else {
+            let key = this.requestKey(action.args);
 
-                return {
-                    ...state,
-                    [key]: this.reduceRequest(state[key], action)
-                };
-            }
+            return {
+                ...state,
+                [key]: this.reduceRequest(state[key], action)
+            };
+        }
     }
 
     reduceRequest(state, action) {
