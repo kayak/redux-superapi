@@ -43,6 +43,27 @@ describe('EndPoint', () => {
             store.dispatch(endPoint.reset());
             expect(endPoint.cancel).to.have.been.calledOnce;
         });
+
+        it('does not swallow application exceptions in promise', (done) => {
+            const store = mockStore({});
+            const endPoint = new EndPoint('test', {url: '/api/buckets/'});
+            store.subscribe(function() {
+                const action = store.getActions().slice(-1)[0];
+                if (action.type === endPoint.actionType('success')) {
+                    throw new Error('Mock application error');
+                }
+            });
+            store.dispatch(endPoint.get()).catch(function() {
+                try {
+                    // Make sure the failure in dispatching 'success' did not trigger an 'error' action to be
+                    // dispatched, i.e. make sure the program failed.
+                    expect(store.getActions()).to.have.length(2);
+                    done();
+                } catch(err) {
+                    done(err);
+                }
+            });
+        });
     });
 
     describe('.transformUrl()', () => {

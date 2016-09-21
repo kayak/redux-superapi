@@ -121,10 +121,16 @@ class EndPoint {
             ...this.defaultRequestConfig[method],
             ...config
         })
-            .then(response => dispatch(this.actionSuccess(response, args)))
             .catch(error => {
+                // First handle "operational errors", where the request did not complete as expected.
                 dispatch(this.actionError(error, args));
                 throw error; // rethrow error for chaining
+            })
+            .then(response => {
+                // The .then handler happens after handling errors from the server ("operational errors") so that we
+                // don't accidentally catch "programmers error".
+                // See http://www.2ality.com/2016/03/promise-rejections-vs-exceptions.html
+                dispatch(this.actionSuccess(response, args));
             });
     }
 
