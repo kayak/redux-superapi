@@ -1,3 +1,5 @@
 src/
 .tmp
 .idea
+coverage
+npm-debug.log
