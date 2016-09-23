@@ -184,7 +184,6 @@ class EndPoint {
                     loading: true,
                     sync: false,
                     syncing: true,
-                    data: {},
                     error: null
                 };
             case this.actionType('success'):
@@ -202,7 +201,6 @@ class EndPoint {
                     loading: false,
                     sync: false,
                     syncing: false,
-                    data: {},
                     error: action.error
                 };
             case this.actionType('reset'):

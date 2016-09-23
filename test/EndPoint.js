@@ -142,6 +142,22 @@ describe('EndPoint', () => {
 
             expect(endPoint.reduce(oldState, action).data).to.deep.equal(data);
         });
+
+        it('does not wipe data on new request', () => {
+            const data = {sample: 42};
+            const oldState = {data};
+            const action = endPoint.actionRequest('get');
+
+            expect(endPoint.reduce(oldState, action).data).to.deep.equal(data);
+        });
+
+        it('does not wipe data on error', () => {
+            const data = {sample: 42};
+            const oldState = {data};
+            const action = endPoint.actionError('Some error');
+
+            expect(endPoint.reduce(oldState, action).data).to.deep.equal(data);
+        });
     });
 
 });
