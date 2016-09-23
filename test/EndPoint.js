@@ -11,6 +11,7 @@ const middlewares = [thunk];
 const mockStore = configureMockStore(middlewares);
 
 var mock = new MockAdapter(EndPoint.axios, {delayResponse: 50});
+mock.onAny('/api/error/').reply(500);
 mock.onAny(/.*/).reply(200);
 
 chai.use(chaiSubset);
@@ -34,6 +35,18 @@ describe('EndPoint', () => {
                 ]);
                 done();
             }).catch(done);
+        });
+
+        it('creates _request and _error actions for a failed endPoint.get()', (done) => {
+            const store = mockStore({});
+            const endPoint = new EndPoint('test', {url: '/api/error/'});
+            store.dispatch(endPoint.get()).catch(() => {
+                expect(store.getActions().map(action => action.type)).to.eql([
+                    '@@super-api@test_request',
+                    '@@super-api@test_error'
+                ]);
+                done();
+            });
         });
 
         it('aborts request on reset', () => {
