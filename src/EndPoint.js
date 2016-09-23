@@ -112,7 +112,11 @@ class EndPoint {
     }
 
     request(dispatch, method, args, config, data = undefined) {
+        // Cancel any pending request
+        this.cancel(args);
+
         dispatch(this.actionRequest(method, args));
+
         return axios.request({
             url: this.transformUrl(args),
             method: method,

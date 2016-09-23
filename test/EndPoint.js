@@ -44,6 +44,14 @@ describe('EndPoint', () => {
             expect(endPoint.cancel).to.have.been.calledOnce;
         });
 
+        it('aborts request before starting a new one', () => {
+            const store = mockStore({});
+            const endPoint = new EndPoint('test', {url: '/api/buckets/'});
+            sinon.spy(endPoint, 'cancel');
+            store.dispatch(endPoint.get());
+            expect(endPoint.cancel).to.have.been.calledOnce;
+        });
+
         it('does not swallow application exceptions in promise', (done) => {
             const store = mockStore({});
             const endPoint = new EndPoint('test', {url: '/api/buckets/'});
