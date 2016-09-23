@@ -64,6 +64,7 @@ superApi.endpointName.options(args, requestConfig = {});
 superApi.endpointName.post(args, data, requestConfig = {});
 superApi.endpointName.put(args, data, requestConfig = {});
 superApi.endpointName.patch(args, data, requestConfig = {});
+superApi.endpointName.reset();
 ```
 
 * `args` (required): dictionary mapping of arguments that need to be replaced in the URL.
@@ -96,13 +97,13 @@ by the end point if the request went through but returned a response with an err
 ### Cancelling requests
 
 Dispatching `superApi.endpointName.reset()` will not only reset the state, it will also cancel any request that was
-started. `reset()` will also be called before starting a new request if another request is still in progress for that
-endpoint.
+started. Starting a new request will cancel any pending request automatically.
 
 ### Making multiple requests for an endpoint
 
-By default, you can only do one request at a time per endpoint. Doing another request will reset the state. In some
-situations you actually want to be able to do multiple requests and store their state separately.
+By default, you can only do one request at a time per endpoint. Doing another request will override the state and cancel
+the pending request. In some situations you actually want to be able to do multiple requests and store their state
+separately.
 
 This is possible by defining the `requestKey` endpoint option. `requestKey` should be a deterministic function that
 takes as sole argument a dictionary of the `args` for the request and returns a string (or anything that can be cast to
