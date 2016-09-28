@@ -98,6 +98,11 @@ describe('EndPoint', () => {
             expect(endPoint.transformUrl({bucketId: 42})).to.equal('/api/buckets/42/')
         });
 
+        it('can replace final argument', function () {
+            const endPoint = new EndPoint('test', {url: '/api/buckets/:bucketId'});
+            expect(endPoint.transformUrl({bucketId: 42})).to.equal('/api/buckets/42')
+        });
+
         it('removes unspecified arguments', function () {
             const endPoint = new EndPoint('test', {url: '/api/buckets/:bucketId/'});
             expect(endPoint.transformUrl()).to.equal('/api/buckets/')

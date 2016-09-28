@@ -39,11 +39,11 @@ class EndPoint {
         let url = this.url;
         // Replace all :arg with the actual value
         Object.keys(args).forEach((key) => {
-            let argRe = new RegExp(':' + key + '(?=[^\w])');
+            let argRe = new RegExp(':' + key + '(?=[^\w]|$)');
             url = url.replace(argRe, args[key]);
         });
         // Remove remaining arguments not present in args
-        url = url.replace(/:[\w]+(?=[^\w])/, '');
+        url = url.replace(/:[\w]+(?=[^\w]|$)/, '');
         // Remove double slashes
         url = url.replace(/\/+/g, '/');
         return url;
