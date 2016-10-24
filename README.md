@@ -58,6 +58,7 @@ Dispatch any of the following actions:
 
 ```
 superApi.endpointName.get(args, requestConfig = {});
+superApi.endpointName.getOnce(args, requestConfig = {});
 superApi.endpointName.delete(args, requestConfig = {});
 superApi.endpointName.head(args, requestConfig = {});
 superApi.endpointName.options(args, requestConfig = {});
@@ -72,6 +73,9 @@ superApi.endpointName.reset();
 * `requestConfig`: configuration object passed on to axios. Extends the configuration set at the API/Endpoint levels.
 
 Example: `dispatch(superApi.experimentDetails.get({experimentId: 42}))`
+
+The `getOnce` method will not trigger a new request if there is already a pending request or if data has already been
+downloaded once.
 
 ### State
 
@@ -89,10 +93,16 @@ The default state is:
 }
 ```
 
+### Chaining
+
+`dispatch` will always return a promise which you can chain with `.then()` or `.catch()`.
+
 ### Handling error
 
 State's `error` property will be axios' error message for malformed requests, or the data returned
 by the end point if the request went through but returned a response with an error status code.
+
+Since `dispatch` returns a promise you can handle the error with `dispatch(endPoint.get()).catch(...)`.
 
 ### Cancelling requests
 
