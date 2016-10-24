@@ -1,8 +1,6 @@
 import axios from "axios";
-import cancelXhrAdapter from "axios-cancel";
-import {Cancellation} from "axios-cancel/cancel";
 
-axios.defaults.adapter = cancelXhrAdapter;
+let CancelToken = axios.CancelToken;
 
 class EndPoint {
     constructor(name, {url, requestKey, defaultRequestConfig}) {
@@ -30,7 +28,7 @@ class EndPoint {
     }
 
     createCancellation(args) {
-        let cancellation = new Cancellation();
+        let cancellation = CancelToken.source();
         this.cancellation[this.requestKey(args)] = cancellation;
         return cancellation;
     }
@@ -148,7 +146,7 @@ class EndPoint {
             url: this.transformUrl(args),
             method: method,
             data: data,
-            cancellation: this.createCancellation(args),
+            cancelToken: this.createCancellation(args).token,
             ...this.defaultRequestConfig[method],
             ...config
         })
