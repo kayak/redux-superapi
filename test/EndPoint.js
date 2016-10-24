@@ -24,6 +24,37 @@ describe('EndPoint', () => {
         expect(endPoint).to.contain.all.keys(['delete', 'get', 'head', 'options', 'post', 'put', 'patch']);
     });
 
+    describe('getOnce', () => {
+        it('only requests once with simultaneous requests', (done) => {
+            const store = mockStore({});
+            const endPoint = new EndPoint('test', {url: '/api/buckets/'});
+            Promise.all([
+                store.dispatch(endPoint.getOnce()),
+                store.dispatch(endPoint.getOnce())
+            ]).then(function() {
+                expect(store.getActions().map(action => action.type)).to.eql([
+                    '@@super-api@test_request',
+                    '@@super-api@test_success'
+                ]);
+                done();
+            }).catch(done);
+        });
+
+        it('only requests once with non-simultaneous requests', (done) => {
+            const store = mockStore({});
+            const endPoint = new EndPoint('test', {url: '/api/buckets/'});
+            store.dispatch(endPoint.getOnce()).then(function() {
+                store.dispatch(endPoint.getOnce()).then(function() {
+                    expect(store.getActions().map(action => action.type)).to.eql([
+                        '@@super-api@test_request',
+                        '@@super-api@test_success'
+                    ]);
+                    done();
+                }).catch(done);
+            }).catch(done);
+        });
+    });
+
     describe('dispatch()', () => {
         it('creates _request and _success actions for a successful endPoint.get()', (done) => {
             const store = mockStore({});
@@ -182,17 +213,54 @@ describe('EndPoint', () => {
 
 
 describe('Multi-request Endpoint', () => {
-    const endPoint1 = new EndPoint('planet', {
-        url: '/api/planets/:planetId/',
-        requestKey: (args) => args.planetId
-    });
+    describe('getOnce', () => {
+        it('only requests once with simultaneous requests', (done) => {
+            const endPoint1 = new EndPoint('planet', {
+                url: '/api/planets/:planetId/',
+                requestKey: (args) => args.planetId
+            });
+            const store = mockStore({});
+            Promise.all([
+                store.dispatch(endPoint1.getOnce({planetId: 42})),
+                store.dispatch(endPoint1.getOnce({planetId: 42}))
+            ]).then(function() {
+                expect(store.getActions().map(action => action.type)).to.eql([
+                    '@@super-api@planet_request',
+                    '@@super-api@planet_success'
+                ]);
+                done();
+            }).catch(done);
+        });
 
-    const endPoint2 = new EndPoint('moon', {
-        url: '/api/moons/:planetId/:moonId/',
-        requestKey: (args) => [args.planetId, args.moonId].toString()
+        it('only requests once with non-simultaneous requests', (done) => {
+            const endPoint1 = new EndPoint('planet', {
+                url: '/api/planets/:planetId/',
+                requestKey: (args) => args.planetId
+            });
+            const store = mockStore({});
+            store.dispatch(endPoint1.getOnce({planetId: 42})).then(function() {
+                store.dispatch(endPoint1.getOnce({planetId: 42})).then(function() {
+                    expect(store.getActions().map(action => action.type)).to.eql([
+                        '@@super-api@planet_request',
+                        '@@super-api@planet_success'
+                    ]);
+                    done();
+                }).catch(done);
+            }).catch(done);
+        });
     });
 
     describe('.reduce()', () => {
+        const endPoint1 = new EndPoint('planet', {
+            url: '/api/planets/:planetId/',
+            requestKey: (args) => args.planetId
+        });
+
+        const endPoint2 = new EndPoint('moon', {
+            url: '/api/moons/:planetId/:moonId/',
+            requestKey: (args) => [args.planetId, args.moonId].toString()
+        });
+
         it('has empty state by default', function () {
             expect(endPoint1.reduce(undefined, {})).to.be.empty;
         });

@@ -111,6 +111,33 @@ class EndPoint {
         };
     }
 
+    getOnce(args, config = {}) {
+        // Will fetch data only if it hasn't been fetched and hasn't started fetching.
+        return (dispatch, getState) => {
+            return this.requestOnce(dispatch, getState, 'get', args, config)
+        }
+    }
+
+    requestOnce(dispatch, getState, method, args, config, data = undefined) {
+        // Start the request only if there is no data already loaded or loading
+        let key = this.requestKey(args);
+        if (this.cancellation[key]) {
+            // A request is already ongoing
+            return Promise.resolve();
+        }
+        let state = getState();
+        if (this.isMultiRequest && state[key] && state[key].sync) {
+            // There is no pending request but data has already been loaded
+            return Promise.resolve();
+        }
+        if (!this.isMultiRequest && state.sync) {
+            // There is no pending request but data has already been loaded
+            return Promise.resolve();
+        }
+
+        return this.request(dispatch, method, args, config, data);
+    }
+
     request(dispatch, method, args, config, data = undefined) {
         // Cancel any pending request
         this.cancel(args);
