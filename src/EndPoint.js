@@ -23,8 +23,12 @@ class EndPoint {
     }
 
     cancel(args) {
-        let cancellation = this.cancellation[this.requestKey(args)];
-        cancellation && cancellation.cancel();
+        let key = this.requestKey(args),
+            cancellation = this.cancellation[key];
+        if (cancellation) {
+            cancellation.cancel();
+            delete this.cancellation[key];
+        }
     }
 
     createCancellation(args) {
@@ -118,19 +122,15 @@ class EndPoint {
 
     requestOnce(dispatch, getState, method, args, config, data = undefined) {
         // Start the request only if there is no data already loaded or loading
+
         let key = this.requestKey(args);
-        if (this.cancellation[key]) {
-            // A request is already ongoing
-            return Promise.resolve();
-        }
         let state = getState();
-        if (this.isMultiRequest && state[key] && state[key].sync) {
-            // There is no pending request but data has already been loaded
-            return Promise.resolve();
-        }
-        if (!this.isMultiRequest && state.sync) {
-            // There is no pending request but data has already been loaded
-            return Promise.resolve();
+
+        if (state) {
+            let _state = this.isMultiRequest ? state[key] : state;
+            if (_state && (_state.sync || _state.syncing)) {
+                return Promise.resolve();
+            }
         }
 
         return this.request(dispatch, method, args, config, data);

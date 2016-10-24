@@ -17,6 +17,13 @@ mock.onAny(/.*/).reply(200);
 chai.use(chaiSubset);
 chai.use(sinonChai);
 
+function mockStoreWithReducer(reducer) {
+    const store = mockStore(() => {
+        return store.getActions().reduce(reducer, undefined);
+    });
+    return store;
+}
+
 describe('EndPoint', () => {
 
     it('has all http methods', () => {
@@ -24,10 +31,10 @@ describe('EndPoint', () => {
         expect(endPoint).to.contain.all.keys(['delete', 'get', 'head', 'options', 'post', 'put', 'patch']);
     });
 
-    describe('getOnce', () => {
+    describe('.getOnce()', () => {
         it('only requests once with simultaneous requests', (done) => {
-            const store = mockStore({});
             const endPoint = new EndPoint('test', {url: '/api/buckets/'});
+            const store = mockStoreWithReducer(endPoint.reduce.bind(endPoint));
             Promise.all([
                 store.dispatch(endPoint.getOnce()),
                 store.dispatch(endPoint.getOnce())
@@ -41,8 +48,8 @@ describe('EndPoint', () => {
         });
 
         it('only requests once with non-simultaneous requests', (done) => {
-            const store = mockStore({});
             const endPoint = new EndPoint('test', {url: '/api/buckets/'});
+            const store = mockStoreWithReducer(endPoint.reduce.bind(endPoint));
             store.dispatch(endPoint.getOnce()).then(function() {
                 store.dispatch(endPoint.getOnce()).then(function() {
                     expect(store.getActions().map(action => action.type)).to.eql([
@@ -213,13 +220,13 @@ describe('EndPoint', () => {
 
 
 describe('Multi-request Endpoint', () => {
-    describe('getOnce', () => {
+    describe('.getOnce()', () => {
         it('only requests once with simultaneous requests', (done) => {
             const endPoint1 = new EndPoint('planet', {
                 url: '/api/planets/:planetId/',
                 requestKey: (args) => args.planetId
             });
-            const store = mockStore({});
+            const store = mockStoreWithReducer(endPoint1.reduce.bind(endPoint1));
             Promise.all([
                 store.dispatch(endPoint1.getOnce({planetId: 42})),
                 store.dispatch(endPoint1.getOnce({planetId: 42}))
@@ -237,7 +244,7 @@ describe('Multi-request Endpoint', () => {
                 url: '/api/planets/:planetId/',
                 requestKey: (args) => args.planetId
             });
-            const store = mockStore({});
+            const store = mockStoreWithReducer(endPoint1.reduce.bind(endPoint1));
             store.dispatch(endPoint1.getOnce({planetId: 42})).then(function() {
                 store.dispatch(endPoint1.getOnce({planetId: 42})).then(function() {
                     expect(store.getActions().map(action => action.type)).to.eql([
